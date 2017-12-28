@@ -1,0 +1,28 @@
+{
+  "name": "webhandle-page-server",
+  "version": "1.0.0",
+  "description": "Serve templates as if they were pages",
+  "main": "webhandle-page-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmergentIdeas/webhandle-page-server.git"
+  },
+  "keywords": [
+    "webhandle",
+    "express",
+    "template",
+    "page"
+  ],
+  "author": "Dan Kolz (Emergent Ideas)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EmergentIdeas/webhandle-page-server/issues"
+  },
+  "homepage": "https://github.com/EmergentIdeas/webhandle-page-server#readme",
+  "dependencies": {
+    "filter-log": "0.0.3"
+  }
+}
