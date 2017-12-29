@@ -1,6 +1,6 @@
 {
   "name": "webhandle-page-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Serve templates as if they were pages",
   "main": "webhandle-page-server.js",
   "scripts": {
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/EmergentIdeas/webhandle-page-server#readme",
   "dependencies": {
+    "commingle": "0.0.3",
     "filter-log": "0.0.3"
   }
 }
