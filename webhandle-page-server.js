@@ -53,6 +53,7 @@ let createPageServer = function(sourceDirectory) {
 								
 								
 								commingle([...server.preRun])(req, res, () => {
+									res.set('Content-Type', 'text/html; charset=UTF-8')
 									res.render((isDirectory ? req.path : path.dirname(req.path)) + '/' + currentName)
 								})
 							})
