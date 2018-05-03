@@ -40,7 +40,17 @@ let createPageServer = function(sourceDirectory) {
 				for(let currentName of ( isDirectory ? server.indexNames : [parsedPath.name])) {
 					for(let item of items) {
 						if((currentName + '.tri') === item) {
-							log.debug('Serving page for: ' + req.path)
+							log.debug({
+								message: 'Serving page for: ' + req.path,
+								path: req.path,
+								method: req.method,
+								hostname: req.hostname,
+								ip: req.ip,
+								protocol: req.protocol,
+								userAgent: req.headers['user-agent'],
+								fileName: path.join(containingPath, item),
+								type: 'page-view'
+							})
 							fs.readFile(containingPath + '/' + currentName + '.json', function(err, data) {
 								if(!err) {
 									log.debug('Found page meta information for: ' + req.path)
