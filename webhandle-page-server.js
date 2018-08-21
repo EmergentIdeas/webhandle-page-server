@@ -19,7 +19,7 @@ let createPageServer = function(sourceDirectory) {
 			return next()
 		}
 		
-		let fullPath = path.join(sourceDirectory, req.path)
+		let fullPath = path.join(sourceDirectory, decodeURI(req.path))
 		fs.stat(fullPath, function(err, data) {
 			let isDirectory = data && data.isDirectory()
 			
@@ -64,7 +64,7 @@ let createPageServer = function(sourceDirectory) {
 								
 								commingle([...server.preRun])(req, res, () => {
 									res.set('Content-Type', 'text/html; charset=UTF-8')
-									res.render((isDirectory ? req.path : path.dirname(req.path)) + '/' + currentName)
+									res.render((isDirectory ? decodeURI(req.path) : path.dirname(decodeURI(req.path))) + '/' + currentName)
 								})
 							})
 							return
