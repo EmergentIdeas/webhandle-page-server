@@ -33,8 +33,11 @@ let createPageServer = function(sourceDirectory) {
 			
 			fs.readdir(containingPath, function(err, items) {
 				if(err) {
-					log.debug('No page found for: ' + reqpath)
-					return next()
+					log.error('No page found for: ' + reqpath)
+					if(callback) {
+						callback()
+					}
+					return 
 				}
 
 				for(let currentName of ( isDirectory ? server.indexNames : [parsedPath.name])) {
