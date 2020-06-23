@@ -42,7 +42,7 @@ let createPageServer = function(sourceDirectory) {
 
 				for(let currentName of ( isDirectory ? server.indexNames : [parsedPath.name])) {
 					for(let item of items) {
-						if((currentName + '.tri') === item) {
+						if((currentName + '.tri') === item || (currentName + '.html') === item) {
 							fs.readFile(containingPath + '/' + currentName + '.json', function(err, data) {
 								let info = {
 									currentName: currentName,
