@@ -52,13 +52,20 @@ let createPageServer = function(sourceDirectory) {
 				})
 
 				res.set('Content-Type', 'text/html; charset=UTF-8')
+				if(server.searchAlternates && res.languages) {
+					for(let alternate of res.languages) {
+						if(info.alternates[alternate.toLowerCase()]) {
+							return res.render(info.alternates[alternate.toLowerCase()])
+						}
+					}
+				}
 				res.render(info.templatePath)
 			})
 		})
 	}
 	server.preRun = []
 	server.indexNames = ['index']
-	server.searchAlternates = true
+	server.searchAlternates = false
 
 	
 	
@@ -114,7 +121,7 @@ let createPageServer = function(sourceDirectory) {
 											if(posAlt.startsWith(currentName) && (posAlt.endsWith('.tri') || posAlt.endsWith('.html')) && posAlt !== item ) {
 												let lastDot = posAlt.lastIndexOf('.')
 												let variation = posAlt.substring(currentName.length + 1, lastDot)
-												info.alternates[variation] = (isDirectory ? decodeURI(reqpath) : path.dirname(decodeURI(reqpath))) + '/' + posAlt.substring(0, lastDot)
+												info.alternates[variation.toLowerCase()] = (isDirectory ? decodeURI(reqpath) : path.dirname(decodeURI(reqpath))) + '/' + posAlt.substring(0, lastDot)
 											}
 											
 										}
