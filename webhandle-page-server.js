@@ -116,6 +116,9 @@ let createPageServer = function(sourceDirectory) {
 								// Search for alternate versions
 								if(server.searchAlternates) {
 									info.alternates = {}
+									if(server.defaultPageLang) {
+										info.alternates[server.defaultPageLang] = info.templatePath
+									}
 									try {
 										for(let posAlt of items) {
 											if(posAlt.startsWith(currentName) && (posAlt.endsWith('.tri') || posAlt.endsWith('.html')) && posAlt !== item ) {
