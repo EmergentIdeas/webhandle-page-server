@@ -14,9 +14,53 @@ const allowedPath = function(path) {
 }
 
 
+function trimStartingSlashes(str) {
+	if(str) {
+		while(str.startsWith('/')) {
+			str = str.substring(1)
+		}
+	}
+	return str
+}
 
 
 let createPageServer = function(sourceDirectory) {
+	
+	let server = function(req, res, next) {
+		if(!allowedPath(req.path)) {
+			return next()
+		}
+		
+		server.findPageInfo(req.path, (err, info) => {
+			if(!info) {
+				return next()
+			}
+			
+			res.locals.page = info.pageInfo || {}
+			
+			commingle([...server.preRun])(req, res, () => {
+				log.debug({
+					message: 'Serving page for: ' + req.path,
+					path: req.path,
+					method: req.method,
+					hostname: req.hostname,
+					ip: req.ip,
+					protocol: req.protocol,
+					userAgent: req.headers['user-agent'],
+					fileName: path.join(info.containingPath, info.item),
+					type: 'page-view'
+				})
+
+				res.set('Content-Type', 'text/html; charset=UTF-8')
+				res.render(info.templatePath)
+			})
+		})
+	}
+	server.preRun = []
+	server.indexNames = ['index']
+	server.searchAlternates = true
+
+	
 	
 	let findPageInfo = function(reqpath, callback) {
 		let fullPath = path.join(sourceDirectory, decodeURI(reqpath))
@@ -43,6 +87,8 @@ let createPageServer = function(sourceDirectory) {
 				for(let currentName of ( isDirectory ? server.indexNames : [parsedPath.name])) {
 					for(let item of items) {
 						if((currentName + '.tri') === item || (currentName + '.html') === item) {
+							
+							
 							fs.readFile(containingPath + '/' + currentName + '.json', function(err, data) {
 								let info = {
 									currentName: currentName,
@@ -58,6 +104,27 @@ let createPageServer = function(sourceDirectory) {
 									}
 									catch(e) {}
 								}
+								
+								
+								// Search for alternate versions
+								if(server.searchAlternates) {
+									info.alternates = {}
+									try {
+										for(let posAlt of items) {
+											if(posAlt.startsWith(currentName) && (posAlt.endsWith('.tri') || posAlt.endsWith('.html')) && posAlt !== item ) {
+												let lastDot = posAlt.lastIndexOf('.')
+												let variation = posAlt.substring(currentName.length + 1, lastDot)
+												info.alternates[variation] = (isDirectory ? decodeURI(reqpath) : path.dirname(decodeURI(reqpath))) + '/' + posAlt.substring(0, lastDot)
+											}
+											
+										}
+									}
+									catch(e) {}
+									for(let key of Object.keys(info.alternates)) {
+										info.alternates[key] = trimStartingSlashes(info.alternates[key])
+									}
+								}
+								info.templatePath = trimStartingSlashes(info.templatePath)
 								
 								if(callback) {
 									callback(null, info)
@@ -80,44 +147,9 @@ let createPageServer = function(sourceDirectory) {
 	}
 	
 	
-	let server = function(req, res, next) {
-		if(!allowedPath(req.path)) {
-			return next()
-		}
-		
-		findPageInfo(req.path, (err, info) => {
-			if(!info) {
-				return next()
-			}
-			
-			res.locals.page = info.pageInfo || {}
-			
-			
-			
-			
-			commingle([...server.preRun])(req, res, () => {
-				log.debug({
-					message: 'Serving page for: ' + req.path,
-					path: req.path,
-					method: req.method,
-					hostname: req.hostname,
-					ip: req.ip,
-					protocol: req.protocol,
-					userAgent: req.headers['user-agent'],
-					fileName: path.join(info.containingPath, info.item),
-					type: 'page-view'
-				})
-
-				res.set('Content-Type', 'text/html; charset=UTF-8')
-				res.render(info.templatePath)
-			})
-		})
-		
-	}
+	
 	server.findPageInfo = findPageInfo
 	
-	server.preRun = []
-	server.indexNames = ['index']
 	
 	
 	return server
