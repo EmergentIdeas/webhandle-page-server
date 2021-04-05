@@ -27,45 +27,64 @@ function trimStartingSlashes(str) {
 let createPageServer = function(sourceDirectory) {
 	
 	let server = function(req, res, next) {
-		if(!allowedPath(req.path)) {
+		let requestedPath = req.pagePath || req.path
+		if(!allowedPath(requestedPath)) {
 			return next()
 		}
 		
-		server.findPageInfo(req.path, (err, info) => {
+		server.findPageInfo(requestedPath, (err, info) => {
 			if(!info) {
 				return next()
 			}
-			
-			res.locals.page = info.pageInfo || {}
-			
-			commingle([...server.preRun])(req, res, () => {
-				log.debug({
-					message: 'Serving page for: ' + req.path,
-					path: req.path,
-					method: req.method,
-					hostname: req.hostname,
-					ip: req.ip,
-					protocol: req.protocol,
-					userAgent: req.headers['user-agent'],
-					fileName: path.join(info.containingPath, info.item),
-					type: 'page-view'
-				})
-
-				res.set('Content-Type', 'text/html; charset=UTF-8')
-				if(server.searchAlternates && res.languages) {
-					for(let alternate of res.languages) {
-						if(info.alternates[alternate.toLowerCase()]) {
-							return res.render(info.alternates[alternate.toLowerCase()])
-						}
-					}
-				}
-				res.render(info.templatePath)
-			})
+			server.prerenderSetup(req, res, info, (templatePath) => {
+				res.render(templatePath)
+			})	
 		})
 	}
+
 	server.preRun = []
 	server.indexNames = ['index']
 	server.searchAlternates = false
+	server.prerenderSetup = (req, res, info, next) => {
+		if(!res.locals.page) {
+			res.locals.page = info.pageInfo || {}
+		}
+		else {
+			res.locals.page = Object.assign({}, info.pageInfo || {}, res.locals.page)
+		}
+		
+		info = info || {}
+		
+		commingle([...server.preRun])(req, res, () => {
+			let requestedPath = req.pagePath || req.path
+			let reqParms = {
+				message: 'Serving page for: ' + requestedPath,
+				path: req.path,
+				method: req.method,
+				hostname: req.hostname,
+				ip: req.ip,
+				protocol: req.protocol,
+				userAgent: req.headers['user-agent'],
+				type: 'page-view'
+			}
+			if(info.containingPath && info.item) {
+				reqParms.fileName = path.join(info.containingPath, info.item)
+			}
+			log.debug(reqParms)
+
+			res.set('Content-Type', 'text/html; charset=UTF-8')
+			if(server.searchAlternates && res.languages) {
+				for(let alternate of res.languages) {
+					if(info.alternates[alternate.toLowerCase()]) {
+						return next(info.alternates[alternate.toLowerCase()])
+					}
+				}
+			}
+			else {
+				return next(info.templatePath)
+			}
+		})
+	}
 
 	
 	
