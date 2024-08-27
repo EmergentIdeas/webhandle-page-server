@@ -29,6 +29,14 @@ let createPageServer = function(sourceDirectory) {
 				return next()
 			}
 			server.prerenderSetup(req, res, info, (templatePath) => {
+				// If the page is private, the user MUST be signed in as somebody. This is just the very most
+				// basic control so that the site can prevent a page from being indexed.
+				// Fine grained control should be handled elsewhere.
+				if(res.locals.page && res.locals.page.pageVisibility) {
+					if(res.locals.page.pageVisibility === 'private' && !req.user) {
+						return next()
+					}
+				}
 				res.render(templatePath)
 			})	
 		}, {
